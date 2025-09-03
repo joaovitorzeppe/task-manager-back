@@ -12,16 +12,19 @@ module.exports = {
           name: "João Silva",
           email: "joao@example.com",
           password: hashedPassword,
+          role: "admin",
         },
         {
           name: "Maria Santos",
           email: "maria@example.com",
           password: hashedPassword,
+          role: "manager",
         },
         {
           name: "Pedro Oliveira",
           email: "pedro@example.com",
           password: hashedPassword,
+          role: "developer",
         },
       ],
       {}

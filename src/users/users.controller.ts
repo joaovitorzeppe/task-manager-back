@@ -3,7 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   Delete,
   HttpCode,
@@ -12,7 +12,6 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiParam,
   ApiBody,
   ApiCreatedResponse,
@@ -42,6 +41,7 @@ export class UsersController {
         id: 1,
         name: "João Silva",
         email: "joao@example.com",
+        role: "admin",
         createdAt: "2025-09-03T17:27:32.672Z",
         updatedAt: "2025-09-03T17:27:32.672Z",
         deletedAt: null,
@@ -64,6 +64,7 @@ export class UsersController {
           id: 1,
           name: "João Silva",
           email: "joao@example.com",
+          role: "admin",
           createdAt: "2025-09-03T17:27:32.672Z",
           updatedAt: "2025-09-03T17:27:32.672Z",
           deletedAt: null,
@@ -85,6 +86,7 @@ export class UsersController {
         id: 1,
         name: "João Silva",
         email: "joao@example.com",
+        role: "admin",
         createdAt: "2025-09-03T17:27:32.672Z",
         updatedAt: "2025-09-03T17:27:32.672Z",
         deletedAt: null,
@@ -97,7 +99,7 @@ export class UsersController {
     return this.usersService.findOne(parseInt(id));
   }
 
-  @Patch(":id")
+  @Put(":id")
   @ApiOperation({ summary: "Atualizar usuário" })
   @ApiParam({ name: "id", description: "ID do usuário", example: 1 })
   @ApiBody({ type: UpdateUserDto })
@@ -108,6 +110,7 @@ export class UsersController {
         id: 1,
         name: "João Silva Costa",
         email: "joao@example.com",
+        role: "admin",
         createdAt: "2025-09-03T17:27:32.672Z",
         updatedAt: "2025-09-03T17:29:15.275Z",
         deletedAt: null,

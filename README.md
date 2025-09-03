@@ -67,9 +67,16 @@ A API possui documentação completa com Swagger disponível em:
 {
   "name": "João Silva",
   "email": "joao@example.com",
-  "password": "123456"
+  "password": "123456",
+  "role": "admin"
 }
 ```
+
+**Roles disponíveis:**
+
+- `admin` - Administrador do sistema
+- `manager` - Gerente/Coordenador
+- `developer` - Desenvolvedor (padrão)
 
 ## Tecnologias utilizadas
 

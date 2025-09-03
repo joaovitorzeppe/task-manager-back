@@ -26,4 +26,12 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     required: false,
   })
   password?: string;
+
+  @ApiProperty({
+    description: "Papel/função do usuário no sistema",
+    example: "manager",
+    enum: ["admin", "manager", "developer"],
+    required: false,
+  })
+  role?: "admin" | "manager" | "developer";
 }
