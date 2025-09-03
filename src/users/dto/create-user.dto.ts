@@ -23,7 +23,7 @@ export class CreateUserDto {
     format: "email",
   })
   @IsNotEmpty()
-  @IsEmail()
+  @IsEmail({}, { message: "Email deve ser válido" })
   email: string;
 
   @ApiProperty({
@@ -32,8 +32,8 @@ export class CreateUserDto {
     minLength: 6,
   })
   @IsNotEmpty()
-  @IsString()
-  @MinLength(6)
+  @IsString({ message: "Senha deve ser uma string" })
+  @MinLength(6, { message: "Senha deve ter pelo menos 6 caracteres" })
   password: string;
 
   @ApiProperty({
@@ -43,6 +43,8 @@ export class CreateUserDto {
     default: "developer",
   })
   @IsNotEmpty()
-  @IsIn(["admin", "manager", "developer"])
+  @IsIn(["admin", "manager", "developer"], {
+    message: "Papel/função deve ser um dos valores permitidos",
+  })
   role: "admin" | "manager" | "developer";
 }

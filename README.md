@@ -44,14 +44,6 @@ npm run start:dev
 
 ## Estrutura da API
 
-### Usuários
-
-- `POST /users` - Criar usuário
-- `GET /users` - Listar todos os usuários
-- `GET /users/:id` - Buscar usuário por ID
-- `PATCH /users/:id` - Atualizar usuário
-- `DELETE /users/:id` - Remover usuário
-
 ### Documentação da API
 
 A API possui documentação completa com Swagger disponível em:
@@ -60,6 +52,14 @@ A API possui documentação completa com Swagger disponível em:
 - **Interface interativa** para testar todos os endpoints
 - **Exemplos de requisição e resposta** para cada operação
 - **Descrições detalhadas** de parâmetros e códigos de status
+
+### Usuários
+
+- `POST /users` - Criar usuário
+- `GET /users` - Listar todos os usuários
+- `GET /users/:id` - Buscar usuário por ID
+- `PATCH /users/:id` - Atualizar usuário
+- `DELETE /users/:id` - Remover usuário
 
 ### Exemplo de criação de usuário
 

@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  UseGuards,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -22,13 +23,19 @@ import {
   ApiNotFoundResponse,
   ApiConflictResponse,
   ApiQuery,
+  ApiBearerAuth,
 } from "@nestjs/swagger";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import type { CurrentUserType } from "../auth/decorators/current-user.decorator";
 
 @ApiTags("users")
 @Controller("users")
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -52,7 +59,10 @@ export class UsersController {
   })
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   @ApiConflictResponse({ description: "Email já está em uso" })
-  create(@Body() createUserDto: CreateUserDto) {
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
     return this.usersService.create(createUserDto);
   }
 
@@ -94,6 +104,7 @@ export class UsersController {
     },
   })
   findAll(
+    @CurrentUser() currentUser: CurrentUserType,
     @Query("email") email?: string,
     @Query("role") role?: string,
     @Query("name") name?: string
@@ -130,7 +141,7 @@ export class UsersController {
   })
   @ApiNotFoundResponse({ description: "Usuário não encontrado" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
-  findById(@Param("id") id: string) {
+  findById(@Param("id") id: string, @CurrentUser() currentUser: any) {
     return this.usersService.findById(parseInt(id));
   }
 
@@ -160,7 +171,11 @@ export class UsersController {
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   @ApiNotFoundResponse({ description: "Usuário não encontrado" })
   @ApiConflictResponse({ description: "Email já está em uso" })
-  update(@Param("id") id: string, @Body() updateUserDto: UpdateUserDto) {
+  update(
+    @Param("id") id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() currentUser: any
+  ) {
     return this.usersService.update(parseInt(id), updateUserDto);
   }
 
@@ -176,7 +191,7 @@ export class UsersController {
   @ApiNoContentResponse({ description: "Usuário removido com sucesso" })
   @ApiNotFoundResponse({ description: "Usuário não encontrado" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
-  remove(@Param("id") id: string) {
+  remove(@Param("id") id: string, @CurrentUser() currentUser: any) {
     return this.usersService.remove(parseInt(id));
   }
 }

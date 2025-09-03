@@ -1,6 +1,13 @@
 import { PartialType } from "@nestjs/mapped-types";
 import { CreateUserDto } from "./create-user.dto";
 import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  MinLength,
+} from "class-validator";
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiProperty({
@@ -9,6 +16,8 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     minLength: 2,
     required: false,
   })
+  @IsString({ message: "Nome deve ser uma string" })
+  @IsOptional({ message: "Nome é opcional" })
   name?: string;
 
   @ApiProperty({
@@ -17,6 +26,8 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     format: "email",
     required: false,
   })
+  @IsEmail({}, { message: "Email deve ser válido" })
+  @IsOptional({ message: "Email é opcional" })
   email?: string;
 
   @ApiProperty({
@@ -25,6 +36,9 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     minLength: 6,
     required: false,
   })
+  @IsString({ message: "Senha deve ser uma string" })
+  @IsOptional({ message: "Senha é opcional" })
+  @MinLength(6, { message: "Senha deve ter pelo menos 6 caracteres" })
   password?: string;
 
   @ApiProperty({
@@ -33,5 +47,9 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     enum: ["admin", "manager", "developer"],
     required: false,
   })
+  @IsIn(["admin", "manager", "developer"], {
+    message: "Papel/função deve ser um dos valores permitidos",
+  })
+  @IsOptional({ message: "Papel/função é opcional" })
   role?: "admin" | "manager" | "developer";
 }
