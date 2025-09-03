@@ -17,7 +17,6 @@ module.exports = {
       email: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
       },
       password: {
         type: Sequelize.STRING,
@@ -44,8 +43,9 @@ module.exports = {
       },
     });
 
-    await queryInterface.addIndex("users", ["email"]);
-    await queryInterface.addIndex("users", ["deletedAt"]);
+    await queryInterface.sequelize.query(
+      'ALTER TABLE users ADD CONSTRAINT users_email_deleted_at_unique UNIQUE NULLS NOT DISTINCT (email, "deletedAt");'
+    );
   },
 
   async down(queryInterface, Sequelize) {

@@ -1,9 +1,16 @@
-import { Column, DataType, Model, Table, Unique } from "sequelize-typescript";
+import { Column, DataType, Model, Table } from "sequelize-typescript";
 
 @Table({
   tableName: "users",
   timestamps: true,
   paranoid: true,
+  indexes: [
+    {
+      name: "users_email_deleted_at_unique",
+      unique: true,
+      fields: ["email", "deletedAt"],
+    },
+  ],
 })
 export class User extends Model<User> {
   @Column({
@@ -19,7 +26,6 @@ export class User extends Model<User> {
   })
   name: string;
 
-  @Unique
   @Column({
     type: DataType.STRING,
     allowNull: false,

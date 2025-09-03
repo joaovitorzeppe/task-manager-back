@@ -91,7 +91,9 @@ A API possui documentação completa com Swagger disponível em:
 
 ## Desenvolvimento
 
-Para executar os testes:
+### Testes
+
+Para executar todos os testes:
 
 ```bash
 npm run test
@@ -103,8 +105,24 @@ Para executar os testes em modo watch:
 npm run test:watch
 ```
 
+Para executar testes específicos:
+
+```bash
+npm test -- --testPathPatterns=users.controller.spec.ts
+```
+
 Para executar os testes e2e:
 
 ```bash
 npm run test:e2e
 ```
+
+### Cobertura de Testes
+
+O projeto possui testes unitários abrangentes para:
+
+- **UsersController** - Testa todos os endpoints CRUD
+- **Validações de erro** - Email duplicado, usuário não encontrado, etc.
+- **Conversões de tipo** - String ID para número
+- **Diferentes roles** - admin, manager, developer
+- **Cenários de sucesso e falha** - Cobertura completa dos casos de uso

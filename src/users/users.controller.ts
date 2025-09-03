@@ -8,6 +8,7 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -20,6 +21,7 @@ import {
   ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiConflictResponse,
+  ApiQuery,
 } from "@nestjs/swagger";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -55,7 +57,26 @@ export class UsersController {
   }
 
   @Get()
-  @ApiOperation({ summary: "Listar todos os usuários" })
+  @ApiOperation({ summary: "Listar todos os usuários com filtros opcionais" })
+  @ApiQuery({
+    name: "email",
+    description: "Filtrar por email do usuário",
+    example: "joao@example.com",
+    required: false,
+  })
+  @ApiQuery({
+    name: "role",
+    description: "Filtrar por role do usuário",
+    example: "admin",
+    required: false,
+    enum: ["admin", "manager", "developer"],
+  })
+  @ApiQuery({
+    name: "name",
+    description: "Filtrar por nome do usuário",
+    example: "João Silva",
+    required: false,
+  })
   @ApiOkResponse({
     description: "Lista de usuários retornada com sucesso",
     schema: {
@@ -72,13 +93,27 @@ export class UsersController {
       ],
     },
   })
-  findAll() {
-    return this.usersService.findAll();
+  findAll(
+    @Query("email") email?: string,
+    @Query("role") role?: string,
+    @Query("name") name?: string
+  ) {
+    const filters: { email?: string; role?: string; name?: string } = {};
+    if (email) filters.email = email;
+    if (role) filters.role = role;
+    if (name) filters.name = name;
+
+    return this.usersService.findAll(filters);
   }
 
   @Get(":id")
   @ApiOperation({ summary: "Buscar usuário por ID" })
-  @ApiParam({ name: "id", description: "ID do usuário", example: 1 })
+  @ApiParam({
+    name: "id",
+    description: "ID do usuário",
+    example: 1,
+    type: "number",
+  })
   @ApiOkResponse({
     description: "Usuário encontrado com sucesso",
     schema: {
@@ -95,13 +130,18 @@ export class UsersController {
   })
   @ApiNotFoundResponse({ description: "Usuário não encontrado" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
-  findOne(@Param("id") id: string) {
-    return this.usersService.findOne(parseInt(id));
+  findById(@Param("id") id: string) {
+    return this.usersService.findById(parseInt(id));
   }
 
   @Put(":id")
   @ApiOperation({ summary: "Atualizar usuário" })
-  @ApiParam({ name: "id", description: "ID do usuário", example: 1 })
+  @ApiParam({
+    name: "id",
+    description: "ID do usuário",
+    example: 1,
+    type: "number",
+  })
   @ApiBody({ type: UpdateUserDto })
   @ApiOkResponse({
     description: "Usuário atualizado com sucesso",
@@ -112,7 +152,7 @@ export class UsersController {
         email: "joao@example.com",
         role: "admin",
         createdAt: "2025-09-03T17:27:32.672Z",
-        updatedAt: "2025-09-03T17:29:15.275Z",
+        updatedAt: "2025-09-29T17:29:15.275Z",
         deletedAt: null,
       },
     },
@@ -127,7 +167,12 @@ export class UsersController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Remover usuário" })
-  @ApiParam({ name: "id", description: "ID do usuário", example: 1 })
+  @ApiParam({
+    name: "id",
+    description: "ID do usuário",
+    example: 1,
+    type: "number",
+  })
   @ApiNoContentResponse({ description: "Usuário removido com sucesso" })
   @ApiNotFoundResponse({ description: "Usuário não encontrado" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
