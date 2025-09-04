@@ -21,6 +21,7 @@ import {
   ApiNoContentResponse,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
+  ApiForbiddenResponse,
   ApiQuery,
   ApiBearerAuth,
 } from "@nestjs/swagger";
@@ -28,19 +29,25 @@ import { TasksService } from "./tasks.service";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { RolesGuard } from "../auth/guards/roles.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { CurrentUserType } from "../auth/decorators/current-user.decorator";
 
 @ApiTags("tasks")
 @Controller("tasks")
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Post()
+  @Roles("admin", "manager")
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: "Criar nova tarefa" })
+  @ApiOperation({
+    summary: "Criar nova tarefa",
+    description: "Roles permitidos: admin, manager",
+  })
   @ApiBody({ type: CreateTaskDto })
   @ApiCreatedResponse({
     description: "Tarefa criada com sucesso",
@@ -60,6 +67,7 @@ export class TasksController {
       },
     },
   })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   create(
     @Body() createTaskDto: CreateTaskDto,
@@ -150,7 +158,10 @@ export class TasksController {
   }
 
   @Put(":id")
-  @ApiOperation({ summary: "Atualizar tarefa" })
+  @ApiOperation({
+    summary: "Atualizar tarefa",
+    description: "Roles permitidos: admin, manager",
+  })
   @ApiParam({
     name: "id",
     description: "ID da tarefa",
@@ -161,6 +172,7 @@ export class TasksController {
   @ApiOkResponse({
     description: "Tarefa atualizada com sucesso",
   })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   @ApiNotFoundResponse({ description: "Tarefa não encontrada" })
   update(
@@ -172,8 +184,12 @@ export class TasksController {
   }
 
   @Delete(":id")
+  @Roles("admin", "manager")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: "Remover tarefa" })
+  @ApiOperation({
+    summary: "Remover tarefa",
+    description: "Roles permitidos: admin, manager",
+  })
   @ApiParam({
     name: "id",
     description: "ID da tarefa",
@@ -181,6 +197,7 @@ export class TasksController {
     type: "number",
   })
   @ApiNoContentResponse({ description: "Tarefa removida com sucesso" })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiNotFoundResponse({ description: "Tarefa não encontrada" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
   remove(@Param("id") id: string, @CurrentUser() currentUser: any) {

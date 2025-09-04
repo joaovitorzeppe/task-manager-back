@@ -22,25 +22,32 @@ import {
   ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiQuery,
+  ApiForbiddenResponse,
   ApiBearerAuth,
 } from "@nestjs/swagger";
 import { ProjectsService } from "./projects.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { RolesGuard } from "../auth/guards/roles.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { CurrentUserType } from "../auth/decorators/current-user.decorator";
 
 @ApiTags("projects")
 @Controller("projects")
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Post()
+  @Roles("admin", "manager")
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: "Criar novo projeto" })
+  @ApiOperation({
+    summary: "Criar novo projeto",
+    description: "Roles permitidos: admin, manager",
+  })
   @ApiBody({ type: CreateProjectDto })
   @ApiCreatedResponse({
     description: "Projeto criado com sucesso",
@@ -65,6 +72,7 @@ export class ProjectsController {
       },
     },
   })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   @ApiNotFoundResponse({ description: "Gerente não encontrado" })
   create(
@@ -75,7 +83,11 @@ export class ProjectsController {
   }
 
   @Get()
-  @ApiOperation({ summary: "Listar todos os projetos com filtros opcionais" })
+  @Roles("admin", "manager")
+  @ApiOperation({
+    summary: "Listar todos os projetos com filtros opcionais",
+    description: "Roles permitidos: admin, manager",
+  })
   @ApiQuery({
     name: "name",
     description: "Filtrar por nome do projeto",
@@ -121,6 +133,7 @@ export class ProjectsController {
       ],
     },
   })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   findAll(
     @CurrentUser() currentUser: CurrentUserType,
     @Query("name") name?: string,
@@ -137,7 +150,11 @@ export class ProjectsController {
   }
 
   @Get(":id")
-  @ApiOperation({ summary: "Buscar projeto por ID" })
+  @Roles("admin", "manager")
+  @ApiOperation({
+    summary: "Buscar projeto por ID",
+    description: "Roles permitidos: admin, manager",
+  })
   @ApiParam({
     name: "id",
     description: "ID do projeto",
@@ -167,6 +184,7 @@ export class ProjectsController {
       },
     },
   })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiNotFoundResponse({ description: "Projeto não encontrado" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
   findById(@Param("id") id: string, @CurrentUser() currentUser: any) {
@@ -174,7 +192,11 @@ export class ProjectsController {
   }
 
   @Put(":id")
-  @ApiOperation({ summary: "Atualizar projeto" })
+  @Roles("admin", "manager")
+  @ApiOperation({
+    summary: "Atualizar projeto",
+    description: "Roles permitidos: admin, manager",
+  })
   @ApiParam({
     name: "id",
     description: "ID do projeto",
@@ -205,6 +227,7 @@ export class ProjectsController {
       },
     },
   })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   @ApiNotFoundResponse({ description: "Projeto não encontrado" })
   update(
@@ -216,8 +239,12 @@ export class ProjectsController {
   }
 
   @Delete(":id")
+  @Roles("admin", "manager")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: "Remover projeto" })
+  @ApiOperation({
+    summary: "Remover projeto",
+    description: "Roles permitidos: admin, manager",
+  })
   @ApiParam({
     name: "id",
     description: "ID do projeto",
@@ -225,6 +252,7 @@ export class ProjectsController {
     type: "number",
   })
   @ApiNoContentResponse({ description: "Projeto removido com sucesso" })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiNotFoundResponse({ description: "Projeto não encontrado" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
   remove(@Param("id") id: string, @CurrentUser() currentUser: any) {

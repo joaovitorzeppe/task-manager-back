@@ -22,6 +22,7 @@ import {
   ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiConflictResponse,
+  ApiForbiddenResponse,
   ApiQuery,
   ApiBearerAuth,
 } from "@nestjs/swagger";
@@ -29,17 +30,20 @@ import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { RolesGuard } from "../auth/guards/roles.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { CurrentUserType } from "../auth/decorators/current-user.decorator";
 
 @ApiTags("users")
 @Controller("users")
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @Roles("admin")
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: "Criar novo usuário" })
   @ApiBody({ type: CreateUserDto })
@@ -59,6 +63,7 @@ export class UsersController {
   })
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   @ApiConflictResponse({ description: "Email já está em uso" })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   create(
     @Body() createUserDto: CreateUserDto,
     @CurrentUser() currentUser: CurrentUserType
@@ -67,6 +72,7 @@ export class UsersController {
   }
 
   @Get()
+  @Roles("admin")
   @ApiOperation({ summary: "Listar todos os usuários com filtros opcionais" })
   @ApiQuery({
     name: "email",
@@ -103,6 +109,7 @@ export class UsersController {
       ],
     },
   })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   findAll(
     @CurrentUser() currentUser: CurrentUserType,
     @Query("email") email?: string,
@@ -118,6 +125,7 @@ export class UsersController {
   }
 
   @Get(":id")
+  @Roles("admin")
   @ApiOperation({ summary: "Buscar usuário por ID" })
   @ApiParam({
     name: "id",
@@ -141,11 +149,13 @@ export class UsersController {
   })
   @ApiNotFoundResponse({ description: "Usuário não encontrado" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   findById(@Param("id") id: string, @CurrentUser() currentUser: any) {
     return this.usersService.findById(parseInt(id));
   }
 
   @Put(":id")
+  @Roles("admin")
   @ApiOperation({ summary: "Atualizar usuário" })
   @ApiParam({
     name: "id",
@@ -171,6 +181,7 @@ export class UsersController {
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   @ApiNotFoundResponse({ description: "Usuário não encontrado" })
   @ApiConflictResponse({ description: "Email já está em uso" })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   update(
     @Param("id") id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -180,6 +191,7 @@ export class UsersController {
   }
 
   @Delete(":id")
+  @Roles("admin")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Remover usuário" })
   @ApiParam({
@@ -191,6 +203,7 @@ export class UsersController {
   @ApiNoContentResponse({ description: "Usuário removido com sucesso" })
   @ApiNotFoundResponse({ description: "Usuário não encontrado" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
+  @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   remove(@Param("id") id: string, @CurrentUser() currentUser: any) {
     return this.usersService.remove(parseInt(id));
   }
