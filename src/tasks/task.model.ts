@@ -5,17 +5,16 @@ import {
   Table,
   ForeignKey,
   BelongsTo,
-  HasMany,
 } from "sequelize-typescript";
 import { User } from "../users/user.model";
-import { Task } from "../tasks/task.model";
+import { Project } from "../projects/project.model";
 
 @Table({
-  tableName: "projects",
+  tableName: "tasks",
   timestamps: true,
   paranoid: true,
 })
-export class Project extends Model<Project> {
+export class Task extends Model<Task> {
   @Column({
     type: DataType.INTEGER,
     primaryKey: true,
@@ -27,7 +26,7 @@ export class Project extends Model<Project> {
     type: DataType.STRING,
     allowNull: false,
   })
-  name: string;
+  title: string;
 
   @Column({
     type: DataType.TEXT,
@@ -36,34 +35,42 @@ export class Project extends Model<Project> {
   description: string;
 
   @Column({
-    type: DataType.ENUM("planned", "active", "completed", "cancelled"),
+    type: DataType.ENUM("todo", "in_progress", "review", "done"),
     allowNull: false,
-    defaultValue: "planned",
+    defaultValue: "todo",
   })
-  status: "planned" | "active" | "completed" | "cancelled";
+  status: "todo" | "in_progress" | "review" | "done";
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.ENUM("low", "medium", "high", "critical"),
     allowNull: false,
+    defaultValue: "medium",
   })
-  startDate: Date;
+  priority: "low" | "medium" | "high" | "critical";
 
   @Column({
     type: DataType.DATE,
     allowNull: true,
   })
-  endDate: Date;
+  dueDate: Date;
+
+  @ForeignKey(() => Project)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  projectId: number;
 
   @ForeignKey(() => User)
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
-  managerId: number;
+  assigneeId: number;
+
+  @BelongsTo(() => Project)
+  project: Project;
 
   @BelongsTo(() => User)
-  manager: User;
-
-  @HasMany(() => Task)
-  tasks: Task[];
+  assignee: User;
 }

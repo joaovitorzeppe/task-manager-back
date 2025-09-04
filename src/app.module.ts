@@ -6,6 +6,7 @@ import { AppService } from "./app.service";
 import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
 import { ProjectsModule } from "./projects/projects.module";
+import { TasksModule } from "./tasks/tasks.module";
 import { databaseConfig } from "./database/config/database.config";
 import jwtConfig from "./config/jwt.config";
 
@@ -19,6 +20,7 @@ import jwtConfig from "./config/jwt.config";
     UsersModule,
     AuthModule,
     ProjectsModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
