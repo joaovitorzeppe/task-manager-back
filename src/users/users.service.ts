@@ -17,22 +17,22 @@ export class UsersService {
     private userModel: typeof User
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(body: CreateUserDto): Promise<User> {
     const existingUser = await this.userModel.findOne({
-      where: { email: createUserDto.email },
+      where: { email: body.email },
     });
 
     if (existingUser) {
       throw new ConflictException("Email já está em uso");
     }
 
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const hashedPassword = await bcrypt.hash(body.password, 10);
 
     const user = await this.userModel.create({
-      name: createUserDto.name,
-      email: createUserDto.email,
+      name: body.name,
+      email: body.email,
       password: hashedPassword,
-      role: createUserDto.role,
+      role: body.role,
     } as User);
 
     return user;
@@ -69,16 +69,16 @@ export class UsersService {
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: number, body: UpdateUserDto): Promise<User> {
     const user = await this.findById(id);
 
     if (!user) {
       throw new NotFoundException("Usuário não encontrado");
     }
 
-    if (updateUserDto.email && updateUserDto.email !== user.email) {
+    if (body.email && body.email !== user.email) {
       const existingUser = await this.userModel.findOne({
-        where: { email: updateUserDto.email },
+        where: { email: body.email },
       });
 
       if (existingUser) {
@@ -86,11 +86,11 @@ export class UsersService {
       }
     }
 
-    if (updateUserDto.password) {
-      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+    if (body.password) {
+      body.password = await bcrypt.hash(body.password, 10);
     }
 
-    await user.update(updateUserDto);
+    await user.update(body);
 
     return this.findById(id);
   }

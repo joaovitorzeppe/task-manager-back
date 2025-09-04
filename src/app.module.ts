@@ -5,6 +5,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
+import { ProjectsModule } from "./projects/projects.module";
 import { databaseConfig } from "./database/config/database.config";
 import jwtConfig from "./config/jwt.config";
 
@@ -17,6 +18,7 @@ import jwtConfig from "./config/jwt.config";
     SequelizeModule.forRoot(databaseConfig),
     UsersModule,
     AuthModule,
+    ProjectsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

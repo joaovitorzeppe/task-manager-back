@@ -6,6 +6,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { User } from "./user.model";
+import { Project } from "../projects/project.model";
 
 describe("UsersService", () => {
   let service: UsersService;
@@ -37,6 +38,7 @@ describe("UsersService", () => {
           autoLoadModels: true,
           synchronize: false,
           logging: false,
+          models: [User, Project],
         }),
         UsersModule,
       ],
@@ -44,17 +46,26 @@ describe("UsersService", () => {
 
     service = module.get<UsersService>(UsersService);
     userModel = module.get<typeof User>(getModelToken(User));
-  });
+  }, 30000);
 
   afterAll(async () => {
-    await userModel.destroy({
-      where: {
-        email: "jest@test.com",
-      },
-      force: true,
-    });
-    await module.close();
-  });
+    try {
+      if (userModel) {
+        await userModel.destroy({
+          where: {
+            email: "jest@test.com",
+          },
+          force: true,
+        });
+      }
+
+      if (module) {
+        await module.close();
+      }
+    } catch (error) {
+      console.error("Erro durante cleanup:", error);
+    }
+  }, 30000);
 
   it("deve ser definido", () => {
     expect(service).toBeDefined();

@@ -43,7 +43,7 @@ export class AuthService {
     return {
       access_token,
       token_type: "Bearer",
-      expires_in: 3600, // 1 hora
+      expires_in: 3600,
       user: {
         id: user.id,
         name: user.name,

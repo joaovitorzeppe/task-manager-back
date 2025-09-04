@@ -1,4 +1,5 @@
-import { Column, DataType, Model, Table } from "sequelize-typescript";
+import { Column, DataType, Model, Table, HasMany } from "sequelize-typescript";
+import { Project } from "../projects/project.model";
 
 @Table({
   tableName: "users",
@@ -44,4 +45,7 @@ export class User extends Model<User> {
     defaultValue: "developer",
   })
   role: "admin" | "manager" | "developer";
+
+  @HasMany(() => Project)
+  projects: Project[];
 }
