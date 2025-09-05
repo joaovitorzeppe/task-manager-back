@@ -1,6 +1,7 @@
 import { Column, DataType, Model, Table, HasMany } from "sequelize-typescript";
 import { Project } from "../projects/project.model";
 import { Task } from "../tasks/task.model";
+import { ProjectMember } from "../projects/project-member.model";
 
 @Table({
   tableName: "users",
@@ -52,4 +53,7 @@ export class User extends Model<User> {
 
   @HasMany(() => Task)
   assignedTasks: Task[];
+
+  @HasMany(() => ProjectMember)
+  projectMemberships: ProjectMember[];
 }

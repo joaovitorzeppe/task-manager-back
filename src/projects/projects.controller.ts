@@ -33,13 +33,20 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { CurrentUserType } from "../auth/decorators/current-user.decorator";
+import { AddProjectMemberDto } from "./dto/add-project-member.dto";
+import { UpdateProjectMemberDto } from "./dto/update-project-member.dto";
+import { ProjectMembersService } from "./project-members.service";
+import { ForbiddenException } from "@nestjs/common";
 
 @ApiTags("projects")
 @Controller("projects")
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(
+    private readonly projectsService: ProjectsService,
+    private readonly projectMembersService: ProjectMembersService
+  ) {}
 
   @Post()
   @Roles("admin", "manager")
@@ -63,7 +70,7 @@ export class ProjectsController {
         manager: {
           id: 1,
           name: "João Silva",
-          email: "joao@example.com",
+          email: "joao@exemplo.com",
           role: "manager",
         },
         createdAt: "2025-01-01T00:00:00.000Z",
@@ -123,7 +130,7 @@ export class ProjectsController {
           manager: {
             id: 1,
             name: "João Silva",
-            email: "joao@example.com",
+            email: "joao@exemplo.com",
             role: "manager",
           },
           createdAt: "2025-01-01T00:00:00.000Z",
@@ -134,7 +141,7 @@ export class ProjectsController {
     },
   })
   @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
-  findAll(
+  async findAll(
     @CurrentUser() currentUser: CurrentUserType,
     @Query("name") name?: string,
     @Query("status") status?: string,
@@ -145,6 +152,17 @@ export class ProjectsController {
     if (name) filters.name = name;
     if (status) filters.status = status.split(",");
     if (managerId) filters.managerId = parseInt(managerId);
+
+    if (currentUser.role !== "admin") {
+      const allowedIds = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (allowedIds.length === 0) {
+        return [];
+      }
+      const all = await this.projectsService.findAll(filters);
+      return all.filter((p) => allowedIds.includes(p.id));
+    }
 
     return this.projectsService.findAll(filters);
   }
@@ -175,7 +193,7 @@ export class ProjectsController {
         manager: {
           id: 1,
           name: "João Silva",
-          email: "joao@example.com",
+          email: "joao@exemplo.com",
           role: "manager",
         },
         createdAt: "2025-01-01T00:00:00.000Z",
@@ -218,7 +236,7 @@ export class ProjectsController {
         manager: {
           id: 1,
           name: "João Silva",
-          email: "joao@example.com",
+          email: "joao@exemplo.com",
           role: "manager",
         },
         createdAt: "2025-01-01T00:00:00.000Z",
@@ -230,11 +248,19 @@ export class ProjectsController {
   @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   @ApiNotFoundResponse({ description: "Projeto não encontrado" })
-  update(
+  async update(
     @Param("id") id: string,
     @Body() updateProjectDto: UpdateProjectDto,
     @CurrentUser() currentUser: any
   ) {
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(parseInt(id))) {
+        throw new ForbiddenException("Acesso negado ao projeto");
+      }
+    }
     return this.projectsService.update(parseInt(id), updateProjectDto);
   }
 
@@ -255,7 +281,78 @@ export class ProjectsController {
   @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiNotFoundResponse({ description: "Projeto não encontrado" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
-  remove(@Param("id") id: string, @CurrentUser() currentUser: any) {
+  async remove(@Param("id") id: string, @CurrentUser() currentUser: any) {
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(parseInt(id))) {
+        throw new ForbiddenException("Acesso negado ao projeto");
+      }
+    }
     return this.projectsService.remove(parseInt(id));
+  }
+
+  @Post(":id/members")
+  @Roles("admin", "manager")
+  @ApiOperation({ summary: "Adicionar membro ao projeto" })
+  async addMember(
+    @Param("id") id: string,
+    @Body() body: AddProjectMemberDto,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(parseInt(id))) {
+        throw new ForbiddenException("Acesso negado ao projeto");
+      }
+    }
+    return this.projectsService.addMember(parseInt(id), body);
+  }
+
+  @Put(":id/members/:memberId")
+  @Roles("admin", "manager")
+  @ApiOperation({ summary: "Atualizar papel de um membro do projeto" })
+  async updateMember(
+    @Param("id") id: string,
+    @Param("memberId") memberId: string,
+    @Body() body: UpdateProjectMemberDto,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(parseInt(id))) {
+        throw new ForbiddenException("Acesso negado ao projeto");
+      }
+    }
+    return this.projectsService.updateMember(
+      parseInt(id),
+      parseInt(memberId),
+      body
+    );
+  }
+
+  @Delete(":id/members/:memberId")
+  @Roles("admin", "manager")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: "Remover membro do projeto" })
+  async removeMember(
+    @Param("id") id: string,
+    @Param("memberId") memberId: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(parseInt(id))) {
+        throw new ForbiddenException("Acesso negado ao projeto");
+      }
+    }
+    return this.projectsService.removeMember(parseInt(id), parseInt(memberId));
   }
 }

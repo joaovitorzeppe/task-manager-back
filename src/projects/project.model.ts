@@ -9,6 +9,7 @@ import {
 } from "sequelize-typescript";
 import { User } from "../users/user.model";
 import { Task } from "../tasks/task.model";
+import { ProjectMember } from "./project-member.model";
 
 @Table({
   tableName: "projects",
@@ -66,4 +67,7 @@ export class Project extends Model<Project> {
 
   @HasMany(() => Task)
   tasks: Task[];
+
+  @HasMany(() => ProjectMember)
+  members: ProjectMember[];
 }

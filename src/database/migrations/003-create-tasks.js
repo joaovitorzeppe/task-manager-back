@@ -38,18 +38,14 @@ module.exports = {
           model: "projects",
           key: "id",
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
       },
       assigneeId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: "users",
           key: "id",
         },
-        onUpdate: "CASCADE",
-        onDelete: "RESTRICT",
       },
       createdAt: {
         allowNull: false,

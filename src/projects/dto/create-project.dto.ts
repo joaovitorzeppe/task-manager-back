@@ -6,8 +6,12 @@ import {
   IsOptional,
   IsNumber,
   MinLength,
+  IsArray,
+  ValidateNested,
 } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
+import { Type } from "class-transformer";
+import { ProjectMemberInputDto } from "./project-member-input.dto";
 
 export class CreateProjectDto {
   @ApiProperty({
@@ -68,4 +72,15 @@ export class CreateProjectDto {
   @IsNotEmpty({ message: "ID do gerente é obrigatório" })
   @IsNumber({}, { message: "ID do gerente deve ser um número" })
   managerId: number;
+
+  @ApiProperty({
+    description: "Lista de membros a vincular na criação",
+    required: false,
+    type: [ProjectMemberInputDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProjectMemberInputDto)
+  members?: ProjectMemberInputDto[];
 }

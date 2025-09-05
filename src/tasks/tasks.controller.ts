@@ -10,6 +10,7 @@ import {
   HttpStatus,
   Query,
   UseGuards,
+  ForbiddenException,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -33,13 +34,17 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { CurrentUserType } from "../auth/decorators/current-user.decorator";
+import { ProjectMembersService } from "../projects/project-members.service";
 
 @ApiTags("tasks")
 @Controller("tasks")
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(
+    private readonly tasksService: TasksService,
+    private readonly projectMembersService: ProjectMembersService
+  ) {}
 
   @Post()
   @Roles("admin", "manager")
@@ -69,10 +74,18 @@ export class TasksController {
   })
   @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
-  create(
+  async create(
     @Body() createTaskDto: CreateTaskDto,
     @CurrentUser() currentUser: CurrentUserType
   ) {
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(createTaskDto.projectId)) {
+        throw new ForbiddenException("Acesso negado ao projeto informado");
+      }
+    }
     return this.tasksService.create(createTaskDto);
   }
 
@@ -115,7 +128,7 @@ export class TasksController {
   @ApiOkResponse({
     description: "Lista de tarefas retornada com sucesso",
   })
-  findAll(
+  async findAll(
     @CurrentUser() currentUser: CurrentUserType,
     @Query("status") status?: string,
     @Query("priority") priority?: string,
@@ -127,6 +140,7 @@ export class TasksController {
       status?: string;
       priority?: string;
       projectId?: number;
+      projectIds?: number[];
       assigneeId?: number;
       title?: string;
     } = {};
@@ -136,6 +150,19 @@ export class TasksController {
     if (projectId) filters.projectId = parseInt(projectId);
     if (assigneeId) filters.assigneeId = parseInt(assigneeId);
     if (title) filters.title = title;
+
+    // Access scoping: non-admin users only see tasks from their projects
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!filters.projectId) {
+        filters.projectIds = allowed;
+      } else if (!allowed.includes(filters.projectId)) {
+        // force empty result if requesting a project they don't belong to
+        filters.projectIds = [-1];
+      }
+    }
 
     return this.tasksService.findAll(filters);
   }
@@ -153,8 +180,20 @@ export class TasksController {
   })
   @ApiNotFoundResponse({ description: "Tarefa não encontrada" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
-  findById(@Param("id") id: string, @CurrentUser() currentUser: any) {
-    return this.tasksService.findById(parseInt(id));
+  async findById(
+    @Param("id") id: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const task = await this.tasksService.findById(parseInt(id));
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(task.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+    return task;
   }
 
   @Put(":id")
@@ -175,12 +214,23 @@ export class TasksController {
   @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiBadRequestResponse({ description: "Dados inválidos fornecidos" })
   @ApiNotFoundResponse({ description: "Tarefa não encontrada" })
-  update(
+  async update(
     @Param("id") id: string,
     @Body() updateTaskDto: UpdateTaskDto,
-    @CurrentUser() currentUser: any
+    @CurrentUser() currentUser: CurrentUserType
   ) {
-    return this.tasksService.update(parseInt(id), updateTaskDto);
+    const taskId = parseInt(id);
+    if (currentUser.role !== "admin") {
+      const current = await this.tasksService.findById(taskId);
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      const targetProjectId = updateTaskDto.projectId ?? current.projectId;
+      if (!allowed.includes(targetProjectId)) {
+        throw new ForbiddenException("Acesso negado ao projeto informado");
+      }
+    }
+    return this.tasksService.update(taskId, updateTaskDto);
   }
 
   @Delete(":id")
@@ -200,7 +250,20 @@ export class TasksController {
   @ApiForbiddenResponse({ description: "Acesso negado (role insuficiente)" })
   @ApiNotFoundResponse({ description: "Tarefa não encontrada" })
   @ApiBadRequestResponse({ description: "ID inválido fornecido" })
-  remove(@Param("id") id: string, @CurrentUser() currentUser: any) {
-    return this.tasksService.remove(parseInt(id));
+  async remove(
+    @Param("id") id: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const taskId = parseInt(id);
+    if (currentUser.role !== "admin") {
+      const current = await this.tasksService.findById(taskId);
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(current.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+    return this.tasksService.remove(taskId);
   }
 }

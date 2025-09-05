@@ -34,6 +34,7 @@ export class TasksService {
     status?: string;
     priority?: string;
     projectId?: number;
+    projectIds?: number[];
     assigneeId?: number;
     title?: string;
   }): Promise<Task[]> {
@@ -43,6 +44,8 @@ export class TasksService {
         if (value !== undefined && value !== null) {
           if (key === "title") {
             where[key] = { [Op.iLike]: `%${value}%` };
+          } else if (key === "projectIds") {
+            where.projectId = { [Op.in]: value as number[] };
           } else {
             where[key] = value;
           }

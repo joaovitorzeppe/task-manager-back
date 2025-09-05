@@ -73,7 +73,7 @@ export class CreateTaskDto {
     description: "ID do usuário responsável pela tarefa",
     example: 3,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
-  assigneeId: number;
+  assigneeId?: number;
 }

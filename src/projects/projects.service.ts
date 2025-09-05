@@ -9,6 +9,10 @@ import { User } from "../users/user.model";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { Op } from "sequelize";
+import { ProjectMember } from "./project-member.model";
+import { AddProjectMemberDto } from "./dto/add-project-member.dto";
+import { UpdateProjectMemberDto } from "./dto/update-project-member.dto";
+import { ProjectMemberInputDto } from "./dto/project-member-input.dto";
 
 @Injectable()
 export class ProjectsService {
@@ -16,7 +20,9 @@ export class ProjectsService {
     @InjectModel(Project)
     private projectModel: typeof Project,
     @InjectModel(User)
-    private userModel: typeof User
+    private userModel: typeof User,
+    @InjectModel(ProjectMember)
+    private projectMemberModel: typeof ProjectMember
   ) {}
 
   async create(body: CreateProjectDto): Promise<Project> {
@@ -49,6 +55,24 @@ export class ProjectsService {
       managerId: body.managerId,
     } as Project);
 
+    await this.projectMemberModel.findOrCreate({
+      where: { projectId: project.id, userId: body.managerId },
+      defaults: {
+        projectId: project.id,
+        userId: body.managerId,
+        role: "maintainer",
+      },
+    });
+
+    if (body.members && body.members.length > 0) {
+      const toAdd: ProjectMemberInputDto[] = body.members.filter(
+        (m) => m.userId !== body.managerId
+      );
+      for (const member of toAdd) {
+        await this.addMember(project.id, member);
+      }
+    }
+
     return this.findById(project.id);
   }
 
@@ -80,6 +104,10 @@ export class ProjectsService {
           as: "manager",
           attributes: ["id", "name", "email", "role"],
         },
+        {
+          model: ProjectMember,
+          as: "members",
+        },
       ],
     });
   }
@@ -91,6 +119,10 @@ export class ProjectsService {
           model: User,
           as: "manager",
           attributes: ["id", "name", "email", "role"],
+        },
+        {
+          model: ProjectMember,
+          as: "members",
         },
       ],
     });
@@ -148,6 +180,21 @@ export class ProjectsService {
 
     await project.update(updateData);
 
+    const membersCurrent = await this.projectMemberModel.findAll({
+      attributes: ["id", "userId"],
+      where: { projectId: id },
+      raw: true,
+    });
+    for (const member of membersCurrent) {
+      await this.removeMember(id, member.userId);
+    }
+
+    if (body.members && body.members.length > 0) {
+      for (const member of body.members) {
+        await this.addMember(id, member);
+      }
+    }
+
     return this.findById(id);
   }
 
@@ -159,5 +206,82 @@ export class ProjectsService {
     }
 
     await project.destroy();
+  }
+
+  async addMember(projectId: number, body: AddProjectMemberDto) {
+    const exists = await this.projectModel.findByPk(projectId, {
+      attributes: ["id"],
+      raw: true,
+    });
+
+    if (!exists) {
+      throw new NotFoundException("Projeto não encontrado");
+    }
+
+    const user = await this.userModel.findByPk(body.userId, { raw: true });
+
+    if (!user) {
+      throw new NotFoundException("Usuário não encontrado");
+    }
+
+    const [member] = await this.projectMemberModel.findOrCreate({
+      where: { projectId, userId: body.userId },
+      defaults: { projectId, userId: body.userId, role: body.role },
+    });
+
+    if (member.role !== body.role) {
+      await member.update({ role: body.role });
+    }
+
+    return this.findById(projectId);
+  }
+
+  async updateMember(
+    projectId: number,
+    memberId: number,
+    body: UpdateProjectMemberDto
+  ) {
+    const exists = await this.projectModel.findByPk(projectId, {
+      attributes: ["id"],
+      raw: true,
+    });
+
+    if (!exists) {
+      throw new NotFoundException("Projeto não encontrado");
+    }
+
+    const member = await this.projectMemberModel.findOne({
+      where: { userId: memberId, projectId },
+    });
+
+    if (!member) {
+      throw new NotFoundException("Membro não encontrado");
+    }
+
+    await member.update({ role: body.role });
+
+    return this.findById(projectId);
+  }
+
+  async removeMember(projectId: number, memberId: number) {
+    const exists = await this.projectModel.findByPk(projectId, {
+      attributes: ["id"],
+      raw: true,
+    });
+
+    if (!exists) {
+      throw new NotFoundException("Projeto não encontrado");
+    }
+
+    const member = await this.projectMemberModel.findOne({
+      where: { userId: memberId, projectId },
+      logging: console.log,
+    });
+
+    if (!member) {
+      throw new NotFoundException("Membro não encontrado");
+    }
+
+    await member.destroy();
   }
 }

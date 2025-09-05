@@ -64,7 +64,7 @@ export class Task extends Model<Task> {
   @ForeignKey(() => User)
   @Column({
     type: DataType.INTEGER,
-    allowNull: false,
+    allowNull: true,
   })
   assigneeId: number;
 
