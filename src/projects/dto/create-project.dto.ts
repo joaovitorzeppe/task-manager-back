@@ -8,6 +8,7 @@ import {
   MinLength,
   IsArray,
   ValidateNested,
+  MaxLength,
 } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
@@ -22,6 +23,7 @@ export class CreateProjectDto {
   @IsNotEmpty({ message: "Nome do projeto é obrigatório" })
   @IsString({ message: "Nome deve ser uma string" })
   @MinLength(3, { message: "Nome deve ter pelo menos 3 caracteres" })
+  @MaxLength(255, { message: "Nome deve ter no máximo 255 caracteres" })
   name: string;
 
   @ApiProperty({
