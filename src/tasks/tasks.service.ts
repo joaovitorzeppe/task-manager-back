@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { Task } from "./task.model";
+import { TaskComment } from "./task-comment.model";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { Op } from "sequelize";
@@ -13,7 +14,9 @@ import { Op } from "sequelize";
 export class TasksService {
   constructor(
     @InjectModel(Task)
-    private taskModel: typeof Task
+    private taskModel: typeof Task,
+    @InjectModel(TaskComment)
+    private taskCommentModel: typeof TaskComment
   ) {}
 
   async create(body: CreateTaskDto): Promise<Task> {
@@ -83,6 +86,7 @@ export class TasksService {
           as: "assignee",
           attributes: ["id", "name", "email", "role"],
         },
+        // comments can be fetched via dedicated endpoint; keep includes minimal here
       ],
     });
 
@@ -91,6 +95,45 @@ export class TasksService {
     }
 
     return task;
+  }
+
+  async getComments(taskId: number): Promise<TaskComment[]> {
+    return this.taskCommentModel.findAll({
+      where: { taskId },
+      order: [["createdAt", "ASC"]],
+      include: [
+        {
+          model: require("../users/user.model").User,
+          as: "author",
+          attributes: ["id", "name", "email", "role"],
+        },
+      ],
+    });
+  }
+
+  async addComment(
+    taskId: number,
+    authorId: number,
+    content: string
+  ): Promise<TaskComment> {
+    const task = await this.findById(taskId);
+    if (!task) {
+      throw new NotFoundException("Tarefa não encontrada");
+    }
+    const comment = await this.taskCommentModel.create({
+      taskId,
+      authorId,
+      content,
+    } as TaskComment);
+    return this.taskCommentModel.findByPk(comment.id, {
+      include: [
+        {
+          model: require("../users/user.model").User,
+          as: "author",
+          attributes: ["id", "name", "email", "role"],
+        },
+      ],
+    }) as unknown as TaskComment;
   }
 
   async update(id: number, body: UpdateTaskDto): Promise<Task> {

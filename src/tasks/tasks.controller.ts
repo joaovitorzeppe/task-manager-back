@@ -35,6 +35,15 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { CurrentUserType } from "../auth/decorators/current-user.decorator";
 import { ProjectMembersService } from "../projects/project-members.service";
+import { IsNotEmpty, IsString } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
+
+class CreateTaskCommentDto {
+  @ApiProperty({ description: "Conteúdo HTML do comentário" })
+  @IsNotEmpty()
+  @IsString()
+  content: string;
+}
 
 @ApiTags("tasks")
 @Controller("tasks")
@@ -194,6 +203,46 @@ export class TasksController {
       }
     }
     return task;
+  }
+
+  @Get(":id/comments")
+  @ApiOperation({ summary: "Listar comentários de uma tarefa" })
+  @ApiOkResponse({ description: "Comentários retornados com sucesso" })
+  async listComments(
+    @Param("id") id: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const task = await this.tasksService.findById(parseInt(id));
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(task.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+    return this.tasksService.getComments(task.id);
+  }
+
+  @Post(":id/comments")
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: "Criar comentário em uma tarefa" })
+  @ApiCreatedResponse({ description: "Comentário criado com sucesso" })
+  async createComment(
+    @Param("id") id: string,
+    @Body() body: CreateTaskCommentDto,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const task = await this.tasksService.findById(parseInt(id));
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(task.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+    return this.tasksService.addComment(task.id, currentUser.id, body.content);
   }
 
   @Put(":id")

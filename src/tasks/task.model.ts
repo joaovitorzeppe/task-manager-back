@@ -5,9 +5,11 @@ import {
   Table,
   ForeignKey,
   BelongsTo,
+  HasMany,
 } from "sequelize-typescript";
 import { User } from "../users/user.model";
 import { Project } from "../projects/project.model";
+import { TaskComment } from "./task-comment.model";
 
 @Table({
   tableName: "tasks",
@@ -73,4 +75,7 @@ export class Task extends Model<Task> {
 
   @BelongsTo(() => User)
   assignee: User;
+
+  @HasMany(() => TaskComment)
+  comments: TaskComment[];
 }
