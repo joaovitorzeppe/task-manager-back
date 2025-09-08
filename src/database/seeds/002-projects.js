@@ -60,25 +60,37 @@ module.exports = {
 
     await queryInterface.bulkInsert("projects", projects, {});
 
-    const projectsMembers = [
-      {
-        projectId: 1,
-        userId: 1,
-        role: "maintainer",
-      },
-      {
-        projectId: 1,
-        userId: 2,
-        role: "contributor",
-      },
-      {
-        projectId: 1,
-        userId: 3,
-        role: "viewer",
-      },
-    ];
-
-    await queryInterface.bulkInsert("project_members", projectsMembers, {});
+    const projectIds = [1, 2, 3, 4, 5];
+    for (const projectId of projectIds) {
+      const projectsMembers = [
+        {
+          projectId,
+          userId: 1,
+          role: "maintainer",
+        },
+        {
+          projectId,
+          userId: 2,
+          role: "contributor",
+        },
+        {
+          projectId,
+          userId: 3,
+          role: "maintainer",
+        },
+        {
+          projectId,
+          userId: 4,
+          role: "contributor",
+        },
+        {
+          projectId,
+          userId: 5,
+          role: "viewer",
+        },
+      ];
+      await queryInterface.bulkInsert("project_members", projectsMembers, {});
+    }
   },
 
   down: async (queryInterface, Sequelize) => {

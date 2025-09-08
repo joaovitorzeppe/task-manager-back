@@ -26,6 +26,18 @@ module.exports = {
           password: hashedPassword,
           role: "developer",
         },
+        {
+          name: "Arthur Carvalho",
+          email: "arthur@exemplo.com",
+          password: hashedPassword,
+          role: "developer",
+        },
+        {
+          name: "Gustavo Lima",
+          email: "gustavo@exemplo.com",
+          password: hashedPassword,
+          role: "developer",
+        },
       ],
       {}
     );

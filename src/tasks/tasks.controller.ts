@@ -134,6 +134,18 @@ export class TasksController {
     example: "Implementar",
     required: false,
   })
+  @ApiQuery({
+    name: "dueDateFrom",
+    description: "Filtrar por dueDate (>=) ISO",
+    example: "2025-09-01T00:00:00.000Z",
+    required: false,
+  })
+  @ApiQuery({
+    name: "dueDateTo",
+    description: "Filtrar por dueDate (<=) ISO",
+    example: "2025-09-30T23:59:59.999Z",
+    required: false,
+  })
   @ApiOkResponse({
     description: "Lista de tarefas retornada com sucesso",
   })
@@ -143,7 +155,9 @@ export class TasksController {
     @Query("priority") priority?: string,
     @Query("projectId") projectId?: string,
     @Query("assigneeId") assigneeId?: string,
-    @Query("title") title?: string
+    @Query("title") title?: string,
+    @Query("dueDateFrom") dueDateFrom?: string,
+    @Query("dueDateTo") dueDateTo?: string
   ) {
     const filters: {
       status?: string;
@@ -152,6 +166,8 @@ export class TasksController {
       projectIds?: number[];
       assigneeId?: number;
       title?: string;
+      dueDateFrom?: string;
+      dueDateTo?: string;
     } = {};
 
     if (status) filters.status = status;
@@ -159,8 +175,9 @@ export class TasksController {
     if (projectId) filters.projectId = parseInt(projectId);
     if (assigneeId) filters.assigneeId = parseInt(assigneeId);
     if (title) filters.title = title;
+    if (dueDateFrom) filters.dueDateFrom = dueDateFrom;
+    if (dueDateTo) filters.dueDateTo = dueDateTo;
 
-    // Access scoping: non-admin users only see tasks from their projects
     if (currentUser.role !== "admin") {
       const allowed = await this.projectMembersService.getProjectIdsForUser(
         currentUser.id
@@ -168,7 +185,6 @@ export class TasksController {
       if (!filters.projectId) {
         filters.projectIds = allowed;
       } else if (!allowed.includes(filters.projectId)) {
-        // force empty result if requesting a project they don't belong to
         filters.projectIds = [-1];
       }
     }

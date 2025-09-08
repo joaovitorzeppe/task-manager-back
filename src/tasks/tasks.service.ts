@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { Task } from "./task.model";
 import { TaskComment } from "./task-comment.model";
@@ -40,6 +36,8 @@ export class TasksService {
     projectIds?: number[];
     assigneeId?: number;
     title?: string;
+    dueDateFrom?: string;
+    dueDateTo?: string;
   }): Promise<Task[]> {
     const where: any = {};
     if (options) {
@@ -49,11 +47,25 @@ export class TasksService {
             where[key] = { [Op.iLike]: `%${value}%` };
           } else if (key === "projectIds") {
             where.projectId = { [Op.in]: value as number[] };
+          } else if (key === "dueDateFrom" || key === "dueDateTo") {
           } else {
             where[key] = value;
           }
         }
       });
+    }
+
+    if (options?.dueDateFrom && options?.dueDateTo) {
+      where.dueDate = {
+        [Op.between]: [
+          new Date(options.dueDateFrom),
+          new Date(options.dueDateTo),
+        ],
+      };
+    } else if (options?.dueDateFrom) {
+      where.dueDate = { [Op.gte]: new Date(options.dueDateFrom) };
+    } else if (options?.dueDateTo) {
+      where.dueDate = { [Op.lte]: new Date(options.dueDateTo) };
     }
 
     return this.taskModel.findAll({
@@ -86,7 +98,6 @@ export class TasksService {
           as: "assignee",
           attributes: ["id", "name", "email", "role"],
         },
-        // comments can be fetched via dedicated endpoint; keep includes minimal here
       ],
     });
 
