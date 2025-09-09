@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
 import { ConfigModule } from "@nestjs/config";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { AppController } from "./app.controller";
@@ -15,6 +17,10 @@ import jwtConfig from "./config/jwt.config";
     ConfigModule.forRoot({
       isGlobal: true,
       load: [jwtConfig],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, "..", "public"),
+      serveRoot: "/public",
     }),
     SequelizeModule.forRoot(databaseConfig),
     UsersModule,

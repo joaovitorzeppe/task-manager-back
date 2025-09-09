@@ -9,6 +9,7 @@ import { Project } from "../projects/project.model";
 import { ProjectMember } from "../projects/project-member.model";
 import { ProjectMembersService } from "../projects/project-members.service";
 import { TasksGateway } from "./tasks.gateway";
+import { Attachment } from "../projects/attachment.model";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TasksGateway } from "./tasks.gateway";
       User,
       Project,
       ProjectMember,
+      Attachment,
     ]),
   ],
   controllers: [TasksController],

@@ -37,6 +37,9 @@ import type { CurrentUserType } from "../auth/decorators/current-user.decorator"
 import { ProjectMembersService } from "../projects/project-members.service";
 import { IsNotEmpty, IsString } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { UploadedFile, UseInterceptors } from "@nestjs/common";
+import { createMulterOptions } from "../common/upload.config";
 
 class CreateTaskCommentDto {
   @ApiProperty({ description: "Conteúdo HTML do comentário" })
@@ -240,6 +243,79 @@ export class TasksController {
     return this.tasksService.getComments(task.id);
   }
 
+  @Post(":id/attachments")
+  @UseInterceptors(FileInterceptor("file", createMulterOptions("tasks") as any))
+  @ApiOperation({ summary: "Enviar anexo para a tarefa" })
+  async uploadTaskAttachment(
+    @Param("id") id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const task = await this.tasksService.findById(parseInt(id));
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(task.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+
+    if (!file) {
+      throw new (require("@nestjs/common").BadRequestException)(
+        "Tipo de arquivo não permitido"
+      );
+    }
+    const relative = `/public/uploads/tasks/${file.filename}`;
+    return this.tasksService.createAttachmentForTask({
+      filename: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
+      path: file.path,
+      url: relative,
+      taskId: parseInt(id),
+      uploadedById: currentUser.id,
+    });
+  }
+
+  @Get(":id/attachments")
+  @ApiOperation({ summary: "Listar anexos da tarefa" })
+  async listTaskAttachments(
+    @Param("id") id: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const task = await this.tasksService.findById(parseInt(id));
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(task.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+    return this.tasksService.listAttachmentsForTask(parseInt(id));
+  }
+
+  @Delete(":id/attachments/:attachmentId")
+  @ApiOperation({ summary: "Excluir anexo da tarefa" })
+  async deleteTaskAttachment(
+    @Param("id") id: string,
+    @Param("attachmentId") attachmentId: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const task = await this.tasksService.findById(parseInt(id));
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(task.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+    await this.tasksService.removeAttachment(parseInt(attachmentId));
+    return { success: true };
+  }
+
   @Post(":id/comments")
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: "Criar comentário em uma tarefa" })
@@ -259,6 +335,91 @@ export class TasksController {
       }
     }
     return this.tasksService.addComment(task.id, currentUser.id, body.content);
+  }
+
+  @Post(":id/comments/:commentId/attachments")
+  @UseInterceptors(
+    FileInterceptor("file", createMulterOptions("comments") as any)
+  )
+  @ApiOperation({ summary: "Enviar anexo para um comentário de tarefa" })
+  async uploadTaskCommentAttachment(
+    @Param("id") id: string,
+    @Param("commentId") commentId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const task = await this.tasksService.findById(parseInt(id));
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(task.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+
+    const comment = await this.tasksService.findCommentById(
+      parseInt(commentId)
+    );
+    if (!comment || comment.taskId !== task.id) {
+      throw new ForbiddenException("Comentário inválido para a tarefa");
+    }
+
+    if (!file) {
+      throw new (require("@nestjs/common").BadRequestException)(
+        "Tipo de arquivo não permitido"
+      );
+    }
+    const relative = `/public/uploads/comments/${file.filename}`;
+    return this.tasksService.createAttachmentForComment({
+      filename: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
+      path: file.path,
+      url: relative,
+      taskCommentId: parseInt(commentId),
+      uploadedById: currentUser.id,
+    });
+  }
+
+  @Get(":id/comments/:commentId/attachments")
+  @ApiOperation({ summary: "Listar anexos de um comentário de tarefa" })
+  async listTaskCommentAttachments(
+    @Param("id") id: string,
+    @Param("commentId") commentId: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const task = await this.tasksService.findById(parseInt(id));
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(task.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+    return this.tasksService.listAttachmentsForComment(parseInt(commentId));
+  }
+
+  @Delete(":id/comments/:commentId/attachments/:attachmentId")
+  @ApiOperation({ summary: "Excluir anexo de um comentário de tarefa" })
+  async deleteTaskCommentAttachment(
+    @Param("id") id: string,
+    @Param("commentId") commentId: string,
+    @Param("attachmentId") attachmentId: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    const task = await this.tasksService.findById(parseInt(id));
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(task.projectId)) {
+        throw new ForbiddenException("Acesso negado a esta tarefa");
+      }
+    }
+    await this.tasksService.removeAttachment(parseInt(attachmentId));
+    return { success: true };
   }
 
   @Put(":id")

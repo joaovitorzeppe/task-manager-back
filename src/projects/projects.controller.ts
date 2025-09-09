@@ -36,7 +36,14 @@ import type { CurrentUserType } from "../auth/decorators/current-user.decorator"
 import { AddProjectMemberDto } from "./dto/add-project-member.dto";
 import { UpdateProjectMemberDto } from "./dto/update-project-member.dto";
 import { ProjectMembersService } from "./project-members.service";
-import { ForbiddenException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  UploadedFile,
+  UseInterceptors,
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { createMulterOptions } from "../common/upload.config";
+import { Attachment } from "./attachment.model";
 
 @ApiTags("projects")
 @Controller("projects")
@@ -354,5 +361,82 @@ export class ProjectsController {
       }
     }
     return this.projectsService.removeMember(parseInt(id), parseInt(memberId));
+  }
+
+  @Post(":id/attachments")
+  @Roles("admin", "manager", "developer")
+  @UseInterceptors(
+    FileInterceptor("file", createMulterOptions("projects") as any)
+  )
+  @ApiOperation({ summary: "Enviar anexo para o projeto" })
+  async uploadProjectAttachment(
+    @Param("id") id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(parseInt(id))) {
+        throw new ForbiddenException("Acesso negado ao projeto");
+      }
+    }
+
+    if (!file) {
+      throw new (require("@nestjs/common").BadRequestException)(
+        "Tipo de arquivo não permitido"
+      );
+    }
+    const relative = `/public/uploads/projects/${file.filename}`;
+    const attachment = (await this.projectsService.createAttachment({
+      filename: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
+      path: file.path,
+      url: relative,
+      projectId: parseInt(id),
+      uploadedById: currentUser.id,
+    })) as Attachment;
+
+    return attachment;
+  }
+
+  @Get(":id/attachments")
+  @Roles("admin", "manager", "developer")
+  @ApiOperation({ summary: "Listar anexos do projeto" })
+  async listProjectAttachments(
+    @Param("id") id: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(parseInt(id))) {
+        throw new ForbiddenException("Acesso negado ao projeto");
+      }
+    }
+    return this.projectsService.listAttachments({ projectId: parseInt(id) });
+  }
+
+  @Delete(":id/attachments/:attachmentId")
+  @Roles("admin", "manager", "developer")
+  @ApiOperation({ summary: "Excluir anexo do projeto" })
+  async deleteProjectAttachment(
+    @Param("id") id: string,
+    @Param("attachmentId") attachmentId: string,
+    @CurrentUser() currentUser: CurrentUserType
+  ) {
+    if (currentUser.role !== "admin") {
+      const allowed = await this.projectMembersService.getProjectIdsForUser(
+        currentUser.id
+      );
+      if (!allowed.includes(parseInt(id))) {
+        throw new ForbiddenException("Acesso negado ao projeto");
+      }
+    }
+    await this.projectsService.removeAttachment(parseInt(attachmentId));
+    return { success: true };
   }
 }

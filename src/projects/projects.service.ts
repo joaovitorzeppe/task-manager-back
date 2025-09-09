@@ -13,6 +13,7 @@ import { ProjectMember } from "./project-member.model";
 import { AddProjectMemberDto } from "./dto/add-project-member.dto";
 import { UpdateProjectMemberDto } from "./dto/update-project-member.dto";
 import { ProjectMemberInputDto } from "./dto/project-member-input.dto";
+import { Attachment } from "./attachment.model";
 
 @Injectable()
 export class ProjectsService {
@@ -283,5 +284,48 @@ export class ProjectsService {
     }
 
     await member.destroy();
+  }
+
+  async createAttachment(data: {
+    filename: string;
+    mimeType: string;
+    size: number;
+    path: string;
+    url: string;
+    projectId?: number;
+    taskId?: number;
+    taskCommentId?: number;
+    uploadedById: number;
+  }) {
+    return (Attachment as any).create(data);
+  }
+
+  async listAttachments(filter: {
+    projectId?: number;
+    taskId?: number;
+    taskCommentId?: number;
+  }) {
+    const where: any = {};
+    if (filter.projectId) where.projectId = filter.projectId;
+    if (filter.taskId) where.taskId = filter.taskId;
+    if (filter.taskCommentId) where.taskCommentId = filter.taskCommentId;
+    return (Attachment as any).findAll({
+      where,
+      order: [["createdAt", "DESC"]],
+    });
+  }
+
+  async removeAttachment(attachmentId: number): Promise<void> {
+    const attachment = (await (Attachment as any).findByPk(
+      attachmentId
+    )) as Attachment | null;
+    if (!attachment) return;
+    try {
+      const fs = require("fs");
+      if (attachment.path && fs.existsSync(attachment.path)) {
+        fs.unlinkSync(attachment.path);
+      }
+    } catch {}
+    await (attachment as any).destroy();
   }
 }

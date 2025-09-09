@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { Task } from "./task.model";
 import { TaskComment } from "./task-comment.model";
+import { Attachment } from "../projects/attachment.model";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { Op } from "sequelize";
@@ -135,6 +136,18 @@ export class TasksService {
     });
   }
 
+  async findCommentById(id: number): Promise<TaskComment | null> {
+    return this.taskCommentModel.findByPk(id, {
+      include: [
+        {
+          model: require("../users/user.model").User,
+          as: "author",
+          attributes: ["id", "name", "email", "role"],
+        },
+      ],
+    }) as unknown as TaskComment | null;
+  }
+
   async addComment(
     taskId: number,
     authorId: number,
@@ -188,5 +201,63 @@ export class TasksService {
 
     await task.destroy();
     this.tasksGateway.emitTasksChanged();
+  }
+
+  async createAttachmentForTask(data: {
+    filename: string;
+    mimeType: string;
+    size: number;
+    path: string;
+    url: string;
+    taskId: number;
+    uploadedById: number;
+  }): Promise<Attachment> {
+    return (Attachment as any).create(data);
+  }
+
+  async listAttachmentsForTask(taskId: number): Promise<Attachment[]> {
+    return (Attachment as any).findAll({
+      where: { taskId },
+      order: [["createdAt", "DESC"]],
+    });
+  }
+
+  async createAttachmentForComment(data: {
+    filename: string;
+    mimeType: string;
+    size: number;
+    path: string;
+    url: string;
+    taskCommentId: number;
+    uploadedById: number;
+  }): Promise<Attachment> {
+    return (Attachment as any).create(data);
+  }
+
+  async listAttachmentsForComment(
+    taskCommentId: number
+  ): Promise<Attachment[]> {
+    return (Attachment as any).findAll({
+      where: { taskCommentId },
+      order: [["createdAt", "DESC"]],
+    });
+  }
+
+  async findAttachmentById(id: number): Promise<Attachment | null> {
+    return (Attachment as any).findByPk(id) as Attachment | null;
+  }
+
+  async removeAttachment(attachmentId: number): Promise<void> {
+    const attachment = (await (Attachment as any).findByPk(
+      attachmentId
+    )) as Attachment | null;
+    if (!attachment) return;
+    try {
+      const fs = require("fs");
+      if (attachment.path && fs.existsSync(attachment.path)) {
+        fs.unlinkSync(attachment.path);
+      }
+    } catch {}
+    await (attachment as any).destroy();
   }
 }

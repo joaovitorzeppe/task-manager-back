@@ -7,10 +7,11 @@ import { ProjectMember } from "./project-member.model";
 import { ProjectMembersService } from "./project-members.service";
 import { User } from "../users/user.model";
 import { UsersModule } from "../users/users.module";
+import { Attachment } from "./attachment.model";
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Project, User, ProjectMember]),
+    SequelizeModule.forFeature([Project, User, ProjectMember, Attachment]),
     UsersModule,
   ],
   controllers: [ProjectsController],
