@@ -8,6 +8,7 @@ import { User } from "../users/user.model";
 import { Project } from "../projects/project.model";
 import { ProjectMember } from "../projects/project-member.model";
 import { ProjectMembersService } from "../projects/project-members.service";
+import { TasksGateway } from "./tasks.gateway";
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { ProjectMembersService } from "../projects/project-members.service";
     ]),
   ],
   controllers: [TasksController],
-  providers: [TasksService, ProjectMembersService],
+  providers: [TasksService, ProjectMembersService, TasksGateway],
   exports: [TasksService],
 })
 export class TasksModule {}

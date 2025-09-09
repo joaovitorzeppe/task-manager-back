@@ -5,6 +5,7 @@ import { TaskComment } from "./task-comment.model";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { Op } from "sequelize";
+import { TasksGateway } from "./tasks.gateway";
 
 @Injectable()
 export class TasksService {
@@ -12,7 +13,8 @@ export class TasksService {
     @InjectModel(Task)
     private taskModel: typeof Task,
     @InjectModel(TaskComment)
-    private taskCommentModel: typeof TaskComment
+    private taskCommentModel: typeof TaskComment,
+    private readonly tasksGateway: TasksGateway
   ) {}
 
   async create(body: CreateTaskDto): Promise<Task> {
@@ -26,6 +28,7 @@ export class TasksService {
       assigneeId: body.assigneeId,
     } as Task);
 
+    this.tasksGateway.emitTasksChanged();
     return task;
   }
 
@@ -68,14 +71,24 @@ export class TasksService {
       where.dueDate = { [Op.lte]: new Date(options.dueDateTo) };
     }
 
+    const projectInclude: any = {
+      model: require("../projects/project.model").Project,
+      as: "project",
+      attributes: ["id", "name"],
+    };
+
+    if (options?.projectIds && options.projectIds.length > 0) {
+      projectInclude.where = { id: { [Op.in]: options.projectIds } };
+      projectInclude.required = true;
+    } else if (options?.projectId) {
+      projectInclude.where = { id: options.projectId };
+      projectInclude.required = true;
+    }
+
     return this.taskModel.findAll({
       where,
       include: [
-        {
-          model: require("../projects/project.model").Project,
-          as: "project",
-          attributes: ["id", "name"],
-        },
+        projectInclude,
         {
           model: require("../users/user.model").User,
           as: "assignee",
@@ -161,7 +174,9 @@ export class TasksService {
 
     await task.update(updateData);
 
-    return this.findById(id);
+    const updated = await this.findById(id);
+    this.tasksGateway.emitTasksChanged();
+    return updated;
   }
 
   async remove(id: number): Promise<void> {
@@ -172,5 +187,6 @@ export class TasksService {
     }
 
     await task.destroy();
+    this.tasksGateway.emitTasksChanged();
   }
 }

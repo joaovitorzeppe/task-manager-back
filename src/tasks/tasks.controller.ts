@@ -209,7 +209,7 @@ export class TasksController {
     @Param("id") id: string,
     @CurrentUser() currentUser: CurrentUserType
   ) {
-    const task = await this.tasksService.findById(parseInt(id));
+    const task = (await this.tasksService.findById(parseInt(id))).toJSON();
     if (currentUser.role !== "admin") {
       const allowed = await this.projectMembersService.getProjectIdsForUser(
         currentUser.id
@@ -228,7 +228,7 @@ export class TasksController {
     @Param("id") id: string,
     @CurrentUser() currentUser: CurrentUserType
   ) {
-    const task = await this.tasksService.findById(parseInt(id));
+    const task = (await this.tasksService.findById(parseInt(id))).toJSON();
     if (currentUser.role !== "admin") {
       const allowed = await this.projectMembersService.getProjectIdsForUser(
         currentUser.id
@@ -249,7 +249,7 @@ export class TasksController {
     @Body() body: CreateTaskCommentDto,
     @CurrentUser() currentUser: CurrentUserType
   ) {
-    const task = await this.tasksService.findById(parseInt(id));
+    const task = (await this.tasksService.findById(parseInt(id))).toJSON();
     if (currentUser.role !== "admin") {
       const allowed = await this.projectMembersService.getProjectIdsForUser(
         currentUser.id
@@ -286,7 +286,7 @@ export class TasksController {
   ) {
     const taskId = parseInt(id);
     if (currentUser.role !== "admin") {
-      const current = await this.tasksService.findById(taskId);
+      const current = (await this.tasksService.findById(taskId)).toJSON();
       const allowed = await this.projectMembersService.getProjectIdsForUser(
         currentUser.id
       );
@@ -321,7 +321,7 @@ export class TasksController {
   ) {
     const taskId = parseInt(id);
     if (currentUser.role !== "admin") {
-      const current = await this.tasksService.findById(taskId);
+      const current = (await this.tasksService.findById(taskId)).toJSON();
       const allowed = await this.projectMembersService.getProjectIdsForUser(
         currentUser.id
       );
