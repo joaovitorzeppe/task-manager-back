@@ -1,0 +1,758 @@
+type: collection.insomnia.rest/5.0
+name: 🚀 Optidata API
+meta:
+  id: wrk_dc10843533f341c1b40f12f54dcb4689
+  created: 1756935196804
+  modified: 1756935196804
+  description: ""
+collection:
+  - name: 🔐 Autenticação
+    meta:
+      id: fld_d19f0d7ba93744fc9bdbd26547c6d83f
+      created: 1704300000000
+      modified: 1756935906886
+      sortKey: -1704300000000
+      description: Endpoints de autenticação e login
+    children:
+      - url: "{{ _.base_url }}/auth/login"
+        name: Login
+        meta:
+          id: req_b62dbd516c9f48358ee2d59a4ed4eddf
+          created: 1704300000000
+          modified: 1756935903773
+          isPrivate: false
+          description: Realizar login do usuário para obter token JWT
+          sortKey: -1704300000000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "joao@example.com",
+              "password": "123456"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        scripts:
+          afterResponse: |-
+            const jsonBody = insomnia.response.json();
+            insomnia.environment.set("jwt_token", jsonBody.access_token);
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 👥 Usuários
+    meta:
+      id: fld_d35f1c867a374d788720eb4eeba6c399
+      created: 1704300000000
+      modified: 1756935300797
+      sortKey: -1704300000000
+      description: Endpoints de gerenciamento de usuários (requer autenticação)
+    children:
+      - url: "{{ _.base_url }}/users/1"
+        name: Remover Usuário
+        meta:
+          id: req_38de487a16114cfca2fbd9b921a4e8f6
+          created: 1704300000000
+          modified: 1704300000000
+          isPrivate: false
+          description: Remover usuário por ID
+          sortKey: -1704300000000
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users"
+        name: Criar Usuário
+        meta:
+          id: req_3955ccfdc1b2489785236fd11622337b
+          created: 1704300000000
+          modified: 1704300000000
+          isPrivate: false
+          description: Criar novo usuário
+          sortKey: -1704300000000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Novo Usuário",
+              "email": "novo@example.com",
+              "password": "123456",
+              "role": "developer"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/1"
+        name: Buscar Usuário por ID
+        meta:
+          id: req_64e95bff83d44a579bcad7a50cfa6dcc
+          created: 1704300000000
+          modified: 1704300000000
+          isPrivate: false
+          description: Buscar usuário específico por ID
+          sortKey: -1704300000000
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/1"
+        name: Atualizar Usuário
+        meta:
+          id: req_b534da2149324308a05d61e7e95764ff
+          created: 1704300000000
+          modified: 1704300000000
+          isPrivate: false
+          description: Atualizar usuário existente
+          sortKey: -1704300000000
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "João Silva Atualizado",
+              "email": "joao.atualizado@example.com",
+              "role": "admin"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users"
+        name: Listar Usuários
+        meta:
+          id: req_da9f97c0518041ab94a36e729112d0df
+          created: 1704300000000
+          modified: 1756935959982
+          isPrivate: false
+          description: Listar todos os usuários com filtros opcionais
+          sortKey: -1704300000000
+        method: GET
+        parameters:
+          - name: email
+            value: ""
+            description: Filtrar por email
+            disabled: true
+          - name: role
+            value: ""
+            description: Filtrar por role (admin, manager, developer)
+            disabled: true
+          - name: name
+            value: ""
+            description: Filtrar por nome
+            disabled: true
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+          disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 📋 Projetos
+    meta:
+      id: fld_projects_1234567890abcdef
+      created: 1756936000000
+      modified: 1756936000000
+      sortKey: -1704300000000
+      description: Endpoints de gerenciamento de projetos (requer autenticação)
+    children:
+      - url: "{{ _.base_url }}/projects"
+        name: Listar Projetos
+        meta:
+          id: req_projects_list_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Listar todos os projetos com filtros opcionais
+          sortKey: -1704300000000
+        method: GET
+        parameters:
+          - name: name
+            value: ""
+            description: Filtrar por nome do projeto
+            disabled: true
+          - name: status
+            value: ""
+            description: Filtrar por status (planned, active, completed, cancelled)
+            disabled: true
+          - name: managerId
+            value: ""
+            description: Filtrar por ID do gerente
+            disabled: true
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/projects"
+        name: Criar Projeto
+        meta:
+          id: req_projects_create_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Criar novo projeto
+          sortKey: -1704300000000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Novo Projeto",
+              "description": "Descrição do novo projeto",
+              "status": "planned",
+              "startDate": "2024-01-01T00:00:00.000Z",
+              "endDate": "2024-12-31T23:59:59.999Z",
+              "managerId": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/projects/1"
+        name: Buscar Projeto por ID
+        meta:
+          id: req_projects_get_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Buscar projeto específico por ID
+          sortKey: -1704300000000
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/projects/1"
+        name: Atualizar Projeto
+        meta:
+          id: req_projects_update_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Atualizar projeto existente
+          sortKey: -1704300000000
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Projeto Atualizado",
+              "description": "Descrição atualizada",
+              "status": "active"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/projects/1"
+        name: Remover Projeto
+        meta:
+          id: req_projects_delete_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Remover projeto por ID
+          sortKey: -1704300000000
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/projects/1/attachments"
+        name: Upload Anexo (Projeto)
+        meta:
+          id: req_projects_upload_attach_123
+          created: 1756936000007
+          modified: 1756936000007
+          isPrivate: false
+          description: Enviar anexo para projeto (multipart/form-data)
+          sortKey: -1704300000000
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - name: file
+              type: file
+              fileName: /absolute/path/to/file.pdf
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/projects/1/attachments"
+        name: Listar Anexos (Projeto)
+        meta:
+          id: req_projects_list_attach_123
+          created: 1756936000008
+          modified: 1756936000008
+          isPrivate: false
+          description: Listar anexos do projeto
+          sortKey: -1704300000000
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/projects/1/attachments/1"
+        name: Excluir Anexo (Projeto)
+        meta:
+          id: req_projects_delete_attach_123
+          created: 1756936000009
+          modified: 1756936000009
+          isPrivate: false
+          description: Excluir anexo do projeto
+          sortKey: -1704300000000
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: ✅ Tasks
+    meta:
+      id: fld_tasks_1234567890abcdef
+      created: 1756936000000
+      modified: 1756936000000
+      sortKey: -1704300000000
+      description: Endpoints de gerenciamento de tarefas (requer autenticação)
+    children:
+      - url: "{{ _.base_url }}/tasks"
+        name: Listar Tasks
+        meta:
+          id: req_tasks_list_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Listar todas as tarefas com filtros opcionais
+          sortKey: -1704300000000
+        method: GET
+        parameters:
+          - name: status
+            value: ""
+            description: Filtrar por status (todo, in_progress, review, done)
+            disabled: true
+          - name: priority
+            value: ""
+            description: Filtrar por prioridade (low, medium, high, critical)
+            disabled: true
+          - name: projectId
+            value: ""
+            description: Filtrar por ID do projeto
+            disabled: true
+          - name: assigneeId
+            value: ""
+            description: Filtrar por ID do responsável
+            disabled: true
+          - name: title
+            value: ""
+            description: Filtrar por título da tarefa
+            disabled: true
+          - name: dueDateFrom
+            value: "2025-01-01"
+            description: Filtrar por dueDate >= (YYYY-MM-DD)
+            disabled: true
+          - name: dueDateTo
+            value: "2025-12-31"
+            description: Filtrar por dueDate <= (YYYY-MM-DD)
+            disabled: true
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks"
+        name: Criar Task
+        meta:
+          id: req_tasks_create_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Criar nova tarefa
+          sortKey: -1704300000000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "title": "Nova Tarefa",
+              "description": "Descrição da nova tarefa",
+              "status": "todo",
+              "priority": "medium",
+              "dueDate": "2024-12-31T23:59:59.999Z",
+              "projectId": 1,
+              "assigneeId": 3
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks/1"
+        name: Buscar Task por ID
+        meta:
+          id: req_tasks_get_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Buscar tarefa específica por ID
+          sortKey: -1704300000000
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks/1"
+        name: Atualizar Task
+        meta:
+          id: req_tasks_update_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Atualizar tarefa existente
+          sortKey: -1704300000000
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "title": "Tarefa Atualizada",
+              "status": "in_progress",
+              "priority": "high"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks/1"
+        name: Remover Task
+        meta:
+          id: req_tasks_delete_1234567890abcdef
+          created: 1756936000000
+          modified: 1756936000000
+          isPrivate: false
+          description: Remover tarefa por ID
+          sortKey: -1704300000000
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks/1/attachments"
+        name: Upload Anexo (Task)
+        meta:
+          id: req_tasks_upload_attach_123
+          created: 1756936000001
+          modified: 1756936000001
+          isPrivate: false
+          description: Enviar anexo para a tarefa (multipart/form-data)
+          sortKey: -1704300000000
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - name: file
+              type: file
+              fileName: /absolute/path/to/file.pdf
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks/1/attachments"
+        name: Listar Anexos (Task)
+        meta:
+          id: req_tasks_list_attach_123
+          created: 1756936000002
+          modified: 1756936000002
+          isPrivate: false
+          description: Listar anexos da tarefa
+          sortKey: -1704300000000
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks/1/attachments/1"
+        name: Excluir Anexo (Task)
+        meta:
+          id: req_tasks_delete_attach_123
+          created: 1756936000003
+          modified: 1756936000003
+          isPrivate: false
+          description: Excluir anexo da tarefa
+          sortKey: -1704300000000
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks/1/comments/1/attachments"
+        name: Upload Anexo (Comentário)
+        meta:
+          id: req_tasks_comment_upload_attach_123
+          created: 1756936000004
+          modified: 1756936000004
+          isPrivate: false
+          description: Enviar anexo para um comentário de tarefa (multipart/form-data)
+          sortKey: -1704300000000
+        method: POST
+        body:
+          mimeType: multipart/form-data
+          params:
+            - name: file
+              type: file
+              fileName: /absolute/path/to/file.pdf
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks/1/comments/1/attachments"
+        name: Listar Anexos (Comentário)
+        meta:
+          id: req_tasks_comment_list_attach_123
+          created: 1756936000005
+          modified: 1756936000005
+          isPrivate: false
+          description: Listar anexos do comentário
+          sortKey: -1704300000000
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/tasks/1/comments/1/attachments/1"
+        name: Excluir Anexo (Comentário)
+        meta:
+          id: req_tasks_comment_delete_attach_123
+          created: 1756936000006
+          modified: 1756936000006
+          isPrivate: false
+          description: Excluir anexo do comentário
+          sortKey: -1704300000000
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.jwt_token }}"
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - url: "{{ _.base_url }}"
+    name: Root
+    meta:
+      id: req_b0f5275bfd99468ab21ff95957b53967
+      created: 1704300000000
+      modified: 1756935218694
+      isPrivate: false
+      description: Endpoint raiz da API
+      sortKey: -1704300000000
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_bbee2f684017bc896d524eee9f8ba9950e3e0dba
+    created: 1756935196812
+    modified: 1756935906882
+environments:
+  name: Development
+  meta:
+    id: env_7473bcb4246e43da9c5eea7008c53233
+    created: 1704300000000
+    modified: 1756935906886
+    isPrivate: false
+  data:
+    base_url: http://localhost:8080
+    jwt_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvYW9AZXhhbXBsZS5jb20iLCJzdWIiOjEsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1NjkzNTkwNiwiZXhwIjoxNzU2OTM5NTA2fQ.T9Ls2kI-b10wojUs3on9Z95hvIZXAohl2bF5bABmTro

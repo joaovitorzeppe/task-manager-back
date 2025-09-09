@@ -42,6 +42,13 @@ npm run start:dev
 
 **Nota:** A aplicação roda na porta 8080 por padrão.
 
+6. Executar migrations e (opcional) seeds:
+
+```bash
+npm run db:migrate
+npm run db:seed
+```
+
 ## Estrutura da API
 
 ### Documentação da API
@@ -52,6 +59,17 @@ A API possui documentação completa com Swagger disponível em:
 - **Interface interativa** para testar todos os endpoints
 - **Exemplos de requisição e resposta** para cada operação
 - **Descrições detalhadas** de parâmetros e códigos de status
+
+Endpoints principais adicionados recentemente:
+
+- WebSockets: eventos `tasks:changed` (Socket.IO), emitidos em criar/atualizar/excluir tarefas
+- Filtros de tarefas por data: `GET /tasks?dueDateFrom=YYYY-MM-DD&dueDateTo=YYYY-MM-DD`
+- Anexos (multipart/form-data):
+  - Projetos: `POST /projects/:id/attachments`, `GET /projects/:id/attachments`, `DELETE /projects/:id/attachments/:attachmentId`
+  - Tarefas: `POST /tasks/:id/attachments`, `GET /tasks/:id/attachments`, `DELETE /tasks/:id/attachments/:attachmentId`
+  - Comentários de tarefas: `POST /tasks/:id/comments/:commentId/attachments`, `GET /tasks/:id/comments/:commentId/attachments`, `DELETE /tasks/:id/comments/:commentId/attachments/:attachmentId`
+
+Uploads permitidos: pdf, txt, imagens (png/jpg/gif/webp), doc, docx. Arquivos são servidos via `/public/uploads/...`.
 
 ### Usuários
 
@@ -108,7 +126,7 @@ npm run test:watch
 Para executar testes específicos:
 
 ```bash
-npm test -- --testPathPatterns=users.controller.spec.ts
+npm test -- --testPathPatterns=users.service.spec.ts
 ```
 
 Para executar os testes e2e:
