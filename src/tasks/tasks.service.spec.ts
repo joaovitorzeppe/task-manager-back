@@ -8,6 +8,8 @@ import { TaskComment } from "./task-comment.model";
 import { User } from "../users/user.model";
 import { Project } from "../projects/project.model";
 import { NotFoundException } from "@nestjs/common";
+import { ProjectMember } from "../projects/project-member.model";
+import { Attachment } from "../projects/attachment.model";
 
 describe("TasksService", () => {
   let service: TasksService;
@@ -48,7 +50,7 @@ describe("TasksService", () => {
           autoLoadModels: true,
           synchronize: false,
           logging: false,
-          models: [Task, TaskComment, User, Project],
+          models: [Project, User, Attachment, ProjectMember, Task, TaskComment],
         }),
         TasksModule,
       ],

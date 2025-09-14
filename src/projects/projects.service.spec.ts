@@ -8,6 +8,10 @@ import { ConfigModule } from "@nestjs/config";
 import { Project } from "./project.model";
 import { User } from "../users/user.model";
 import { UsersModule } from "../users/users.module";
+import { Attachment } from "./attachment.model";
+import { Task } from "../tasks/task.model";
+import { TaskComment } from "../tasks/task-comment.model";
+import { ProjectMember } from "./project-member.model";
 
 describe("ProjectsService", () => {
   let service: ProjectsService;
@@ -50,7 +54,7 @@ describe("ProjectsService", () => {
           autoLoadModels: true,
           synchronize: false,
           logging: false,
-          models: [Project, User],
+          models: [Project, User, Attachment, ProjectMember, Task, TaskComment],
         }),
         ProjectsModule,
         UsersModule,

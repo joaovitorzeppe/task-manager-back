@@ -7,6 +7,10 @@ import { ConflictException, NotFoundException } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { User } from "./user.model";
 import { Project } from "../projects/project.model";
+import { TaskComment } from "../tasks/task-comment.model";
+import { Task } from "../tasks/task.model";
+import { Attachment } from "../projects/attachment.model";
+import { ProjectMember } from "../projects/project-member.model";
 
 describe("UsersService", () => {
   let service: UsersService;
@@ -38,7 +42,7 @@ describe("UsersService", () => {
           autoLoadModels: true,
           synchronize: false,
           logging: false,
-          models: [User, Project],
+          models: [Project, User, Attachment, ProjectMember, Task, TaskComment],
         }),
         UsersModule,
       ],
